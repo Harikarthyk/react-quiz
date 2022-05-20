@@ -1,0 +1,51 @@
+.quizWrapper {
+    background-color: #dedede;
+    padding: 10px;
+    flex: 1;
+    margin: 5px;
+}
+.quizAnswerInput {    
+    padding: 5px;
+    min-width: 210px;
+    border-radius: 4px;
+}
+.quizAnswerWrapper {
+    padding: 8px;
+}
+.quizTimerText {
+    color: #620d0d;
+}
+.quizQuestionText {
+    padding: 10px;
+    font-size: 17px;
+}
+.quizHeaderText {
+    font-size: 14px;font-weight: bold;
+}
+.quizHeaderWrapper {
+    display: flex;
+    justify-content: space-between;
+}
+.nextButton {
+    padding: 10px;
+    border: 1px solid #d2cece;
+    border-radius: 3px;
+    margin: 2px;
+    cursor: pointer;
+}
+.quizOverText {
+    text-align: center;
+    margin: 10px;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.quizScoreWrapper {
+    text-align: center;
+    margin: 20px;
+}
+
+.quizScoreText {
+    padding: 7px;
+    font-size: 20px;
+}

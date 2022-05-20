@@ -8,8 +8,8 @@ import './Quiz.css';
 const TIMER = 20;
 
 const randomQuestion = (val = 10, OPERATORS = ['+', '-', '*', '/']) => {
-    let min = 1;
-    let max = OPERATORS.length - 1;
+    let min = 0;
+    let max = OPERATORS.length ;
     const operatorIndex = Math.floor(Math.random() * (max - min) + min);
     let num1 = Math.floor((Math.random() * val) + 1);
     let num2 = Math.floor((Math.random() * val) + 1);

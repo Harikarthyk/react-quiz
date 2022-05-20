@@ -1,6 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { updateQuiz } from '../../redux/actions/quiz';
 import AnswerBox from './AnswerBox';
 import NextButton from './NextButton';
 import Question from './Question';
@@ -37,7 +35,7 @@ const randomQuestion = () => {
 
 let interval = null;
 
-const Quiz = ({ title = 'Arithmetic Quiz - 1', totalQuestionLength = 10, id }) => {
+const Quiz = ({ title = 'Arithmetic Quiz - 1', totalQuestionLength = 10 }) => {
     console.log('Rendering Quiz Item');
     let questions = useRef([]);
     const [answers, setAnswers] = useState([]);
@@ -45,10 +43,7 @@ const Quiz = ({ title = 'Arithmetic Quiz - 1', totalQuestionLength = 10, id }) =
     const [answer, setAnswer] = useState('');
     const [totalScore, setTotalScore] = useState(0);
     let answerRef = useRef('');
-    const currQuiz = useSelector(state => state.quiz.quizzes.filter(item => item.id === id ))
-    console.log(currQuiz, 'ee')
-    const dispatch = useDispatch();
-    // const [quizStatus, setQuizStatus] = useState('NOT_STARTED');
+    const [quizStatus, setQuizStatus] = useState('NOT_STARTED');
 
     const calculateScore = () => {
         let temp = 0;
@@ -67,16 +62,6 @@ const Quiz = ({ title = 'Arithmetic Quiz - 1', totalQuestionLength = 10, id }) =
     const newQuestion = () => {
         let question = randomQuestion();
         questions.current.push(question);
-        if(currQuiz[0].status === 'STARTED')
-            dispatch(updateQuiz({
-                title: title,
-                totalQuestionLength: totalQuestionLength,
-                currentActiveQuestion: answers.length,
-                id: id,
-                status: 'STARTED',
-                answers: answers,
-                questions: questions.current
-            }));
     }
 
     const nextQuestionHandler = () => {
@@ -84,28 +69,18 @@ const Quiz = ({ title = 'Arithmetic Quiz - 1', totalQuestionLength = 10, id }) =
         if (totalAnswers >= totalQuestionLength) {
             return;
         }
-
-        setCountDown(TIMER);
         let arr = answers;
         arr.push(answerRef.current);
         answerRef.current = '';
         setAnswers([...arr]);
-        dispatch(updateQuiz({
-            title: title,
-            totalQuestionLength: totalQuestionLength,
-            currentActiveQuestion: totalAnswers + 1,
-            id: id,
-            status: 'STARTED',
-            answers: arr,
-            questions: questions.current
-        }));
         if (totalAnswers + 1 >= totalQuestionLength) {
-            // setQuizStatus('END');
+            setQuizStatus('END');
             clearInterval(interval);
             calculateScore();
             return;
         }
         newQuestion();
+        setCountDown(TIMER);
         setAnswer('');
     }
 
@@ -116,33 +91,22 @@ const Quiz = ({ title = 'Arithmetic Quiz - 1', totalQuestionLength = 10, id }) =
 
     useEffect(() => {
         newQuestion();
-        if(currQuiz[0].status === 'STARTED')
-        startQuizHandler();
         return () => clearInterval(interval);
     }, [totalQuestionLength]);
 
     const startQuizHandler = () => {
 
-
-        // setQuizStatus('STARTED');
-        
+        setQuizStatus('STARTED');
         interval = setInterval(() => {
             if (answers.length < totalQuestionLength) {
                 setCountDown(pre => pre - 1);
             }
         }, 1000);
-        if(currQuiz[0].status !== 'STARTED')
-            dispatch(updateQuiz({
-                title: title,
-                totalQuestionLength: totalQuestionLength,
-                currentActiveQuestion: 1,
-                id: id,
-                status: 'STARTED'
-            }));
+
     }
 
 
-    if (currQuiz[0].status === 'END') {
+    if (quizStatus === 'END') {
         return (  
             <div className='quizWrapper'>
                 <div className='quizHeaderWrapper'>
@@ -189,7 +153,7 @@ const Quiz = ({ title = 'Arithmetic Quiz - 1', totalQuestionLength = 10, id }) =
 
                                             {Number(answers[index])}
 
-                                            {'  '}Correct Answer is {' '}
+                                            {'  '}Correct Answer is {'  '}
                                             {Number(question.correctAnswer)}
                                             
                                         </>
@@ -203,7 +167,7 @@ const Quiz = ({ title = 'Arithmetic Quiz - 1', totalQuestionLength = 10, id }) =
         )
     }
 
-    if (currQuiz[0].status === 'NOT_STARTED') {
+    if (quizStatus === 'NOT_STARTED') {
         return (
             <div className='quizWrapper'>
                 <div className='quizHeaderWrapper'>

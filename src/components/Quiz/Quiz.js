@@ -67,7 +67,6 @@ const Quiz = ({ title , totalQuestionLength }) => {
         if(questions.current.length >= currQuestionNumberRef.current){
             return;
         }
-        console.log(operators, 'neq')
         const question = randomQuestion(maxValue, operators);
         questions.current[currQuestionNumberRef.current - 1] = question;
     }
@@ -146,7 +145,7 @@ const Quiz = ({ title , totalQuestionLength }) => {
                     <div className='quizHeaderText'>
                         {title}
                     </div>
-                    <div>
+                    <div className='quizTotalQuestionText'> 
                         Total Questions {totalQuestionLength}
                     </div>
                 </div>
@@ -209,7 +208,7 @@ const Quiz = ({ title , totalQuestionLength }) => {
                     <div className='quizHeaderText'>
                         {title}
                     </div>
-                    <div>
+                    <div className='quizTotalQuestionText'>
                         Total Questions {totalQuestionLength}
                     </div>
                 </div>
@@ -268,7 +267,7 @@ const Quiz = ({ title , totalQuestionLength }) => {
                 <div className='quizHeaderText'>
                     {title}
                 </div>
-                <div>
+                <div className='quizTotalQuestionText'>
                     {answers.length + 1} / {totalQuestionLength}
                 </div>
                 <div className='quizTimerText'>

@@ -5,15 +5,15 @@ import Question from './Question';
 import './Quiz.css';
 
 
-const TIMER = 10;
-const OPERATORS = ['+', '-', '*', '/'];
+const TIMER = 20;
 
-const randomQuestion = () => {
-
-    const operatorIndex = Math.floor((Math.random() * 3) + 1);
-    let num1 = Math.floor((Math.random() * 9) + 1);
-    let num2 = Math.floor((Math.random() * 9) + 1);
-    if(operatorIndex === 3){
+const randomQuestion = (val = 10, OPERATORS = ['+', '-', '*', '/']) => {
+    let min = 1;
+    let max = OPERATORS.length - 1;
+    const operatorIndex = Math.floor(Math.random() * (max - min) + min);
+    let num1 = Math.floor((Math.random() * val) + 1);
+    let num2 = Math.floor((Math.random() * val) + 1);
+    if(OPERATORS[operatorIndex] === '/'){
         if(num2 > num1){
             let temp = num2;
             num2 = num1;
@@ -35,14 +35,18 @@ const randomQuestion = () => {
 
 let interval = null;
 
-const Quiz = ({ title = 'Arithmetic Quiz - 1', totalQuestionLength = 10 }) => {
+const Quiz = ({ title , totalQuestionLength }) => {
     console.log('Rendering Quiz Item');
     let questions = useRef([]);
+    let answerRef = useRef(undefined);
+    let currQuestionNumberRef = useRef(1);
+    
     const [answers, setAnswers] = useState([]);
     const [countDown, setCountDown] = useState(TIMER);
     const [answer, setAnswer] = useState('');
     const [totalScore, setTotalScore] = useState(0);
-    let answerRef = useRef('');
+    const [operators, setOperators] = useState(['+', '-', '*']);
+    const [maxValue, setMaxValue] = useState(10)
     const [quizStatus, setQuizStatus] = useState('NOT_STARTED');
 
     const calculateScore = () => {
@@ -60,20 +64,26 @@ const Quiz = ({ title = 'Arithmetic Quiz - 1', totalQuestionLength = 10 }) => {
     }
 
     const newQuestion = () => {
-        let question = randomQuestion();
-        questions.current.push(question);
+        if(questions.current.length >= currQuestionNumberRef.current){
+            return;
+        }
+        console.log(operators, 'neq')
+        const question = randomQuestion(maxValue, operators);
+        questions.current[currQuestionNumberRef.current - 1] = question;
     }
 
     const nextQuestionHandler = () => {
-        let totalAnswers = answers.length;
-        if (totalAnswers >= totalQuestionLength) {
+        
+        const totalAnswers = currQuestionNumberRef.current;
+        if (totalAnswers > totalQuestionLength) {
             return;
         }
         let arr = answers;
-        arr.push(answerRef.current);
-        answerRef.current = '';
+        arr[currQuestionNumberRef.current - 1] = answerRef.current;
+        answerRef.current = undefined;
         setAnswers([...arr]);
-        if (totalAnswers + 1 >= totalQuestionLength) {
+        currQuestionNumberRef.current +=1 ;
+        if (currQuestionNumberRef.current > totalQuestionLength) {
             setQuizStatus('END');
             clearInterval(interval);
             calculateScore();
@@ -84,27 +94,50 @@ const Quiz = ({ title = 'Arithmetic Quiz - 1', totalQuestionLength = 10 }) => {
         setAnswer('');
     }
 
+    const restartHandler = () => {
+        setQuizStatus('NOT_STARTED');
+        setCountDown(TIMER);
+        currQuestionNumberRef.current = 1;
+        questions.current = [];
+        setAnswer('');
+        setAnswers([]);
+    }
+    
     if (countDown === -1 && answers.length < totalQuestionLength) {
         nextQuestionHandler();
     }
 
 
     useEffect(() => {
-        newQuestion();
         return () => clearInterval(interval);
     }, [totalQuestionLength]);
 
     const startQuizHandler = () => {
-
+        if(operators.length === 0){
+            alert(`Select one Operator to Start ${title}`);
+            return;
+        }
+        newQuestion();
         setQuizStatus('STARTED');
-        interval = setInterval(() => {
-            if (answers.length < totalQuestionLength) {
+        interval = setInterval(function() {
+            console.log(answers)
+            if (questions.current.length < totalQuestionLength) {
                 setCountDown(pre => pre - 1);
             }
         }, 1000);
 
     }
 
+    const operatorHandler = (item) => {
+        if(operators.includes(item)){
+            let newOperators = operators.filter(op => op !== item);
+            setOperators([...newOperators]);
+        }else {
+            let newOperators = [...operators];
+            newOperators.push(item);
+            setOperators([...newOperators]);
+        }
+    }
 
     if (quizStatus === 'END') {
         return (  
@@ -150,9 +183,8 @@ const Quiz = ({ title = 'Arithmetic Quiz - 1', totalQuestionLength = 10 }) => {
                                             Number(question.correctAnswer)
                                         :
                                         <>
-
-                                            {Number(answers[index])}
-
+                                            {!answers[index] ? "Invalid / Not Answered" : Number(answers[index])}
+                                            <br />
                                             {'  '}Correct Answer is {'  '}
                                             {Number(question.correctAnswer)}
                                             
@@ -163,6 +195,9 @@ const Quiz = ({ title = 'Arithmetic Quiz - 1', totalQuestionLength = 10 }) => {
                         )
                     })}
                 </div>
+                <button className='nextButton' onClick={restartHandler}>
+                    Restart Quiz
+                </button>
             </div>
         )
     }
@@ -178,12 +213,54 @@ const Quiz = ({ title = 'Arithmetic Quiz - 1', totalQuestionLength = 10 }) => {
                         Total Questions {totalQuestionLength}
                     </div>
                 </div>
+                <div className='quizOptionWrapper'>
+                    <div className='quizMaxOperandWrapper'>
+                    <label>Max Operand Value</label>
+                    <input 
+                        min={10} 
+                        
+                        max={50} 
+                        value={maxValue}
+                        type='number' 
+                        onChange={(e) => setMaxValue(e.target.value)}
+                        // onChange={}
+                        className='quizMaxValueInput'
+                    />
+                    </div>
+                    <div>
+                        <button 
+                            onClick={()=>operatorHandler('+')}
+                            className={operators.includes('+') ? 'quizOperatorButtonSelected' : 'quizOperatorButton'} 
+                        >
+                            +
+                        </button>
+                        <button 
+                            onClick={()=>operatorHandler('-')}
+                            className={operators.includes('-') ? 'quizOperatorButtonSelected' : 'quizOperatorButton'} 
+                        >
+                            -
+                        </button>
+                        <button 
+                            onClick={()=>operatorHandler('*')}
+                            className={operators.includes('*') ? 'quizOperatorButtonSelected' : 'quizOperatorButton'} 
+                        >
+                            *
+                        </button>
+                        <button 
+                            onClick={()=>operatorHandler('/')}
+                            className={operators.includes('/') ? 'quizOperatorButtonSelected' : 'quizOperatorButton'} 
+                        >
+                            /
+                        </button>
+                    </div>
+                </div>
                 <button className='nextButton' onClick={startQuizHandler}>
                     Start Quiz
                 </button>
             </div>
         )
     }
+
 
     return (
         <div className='quizWrapper'>

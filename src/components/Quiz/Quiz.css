@@ -40,12 +40,51 @@
     font-weight: 800;
 }
 
+.quizMaxValueInput{
+    padding: 10px;
+    border-radius: 8px;
+}
 .quizScoreWrapper {
     text-align: center;
     margin: 20px;
+}
+.quizOptionWrapper {
+    display: flex;
+    flex-direction: row;
+    margin: 10px;
+}
+button.quizOperatorButton {
+    padding: 8px;
+    margin: 7px;
+    border: 1px solid #d1d1db;
+    border-radius: 5px;
+    font-size: 17px;
+    font-weight: bolder;
+    width: 45px;
+    background: #dddddd;
+}
+
+
+button.quizOperatorButtonSelected {
+    padding: 8px;
+    margin: 7px;
+    border: 1px solid #ffffff;
+    border-radius: 5px;
+    font-size: 17px;
+    font-weight: bolder;
+    width: 45px;
+    background: #ffffff;
 }
 
 .quizScoreText {
     padding: 7px;
     font-size: 20px;
+}
+label {
+    font-size: 10px;
+}
+
+.quizMaxOperandWrapper {
+    display: flex;
+    flex-direction: column;
 }

@@ -2,14 +2,14 @@ const initialState = {
     quizzes: [
         {
             title: 'Arithmetic Quiz - 1',
-            totalQuestionLength: 10,
+            totalQuestionLength: 20,
             currentActiveQuestion: 1,
             id: 1,
             status: 'NOT_STARTED'
         },
         {
             title: 'Arithmetic Quiz - 2',
-            totalQuestionLength: 10,
+            totalQuestionLength: 20,
             currentActiveQuestion: 1,
             id: 2,
             status: 'NOT_STARTED'

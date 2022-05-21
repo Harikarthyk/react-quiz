@@ -1,21 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { updateQuiz } from '../../redux/actions/quiz';
 import AnswerBox from './AnswerBox';
 import NextButton from './NextButton';
 import Question from './Question';
 import './Quiz.css';
 
 
-const TIMER = 10;
-const OPERATORS = ['+', '-', '*', '/'];
+const TIMER = 20;
 
-const randomQuestion = () => {
-
-    const operatorIndex = Math.floor((Math.random() * 3) + 1);
-    let num1 = Math.floor((Math.random() * 9) + 1);
-    let num2 = Math.floor((Math.random() * 9) + 1);
-    if(operatorIndex === 3){
+const randomQuestion = (val = 10, OPERATORS = ['+', '-', '*', '/']) => {
+    let min = 0;
+    let max = OPERATORS.length ;
+    const operatorIndex = Math.floor(Math.random() * (max - min) + min);
+    let num1 = Math.floor((Math.random() * val) + 1);
+    let num2 = Math.floor((Math.random() * val) + 1);
+    if(OPERATORS[operatorIndex] === '/'){
         if(num2 > num1){
             let temp = num2;
             num2 = num1;
@@ -37,18 +35,19 @@ const randomQuestion = () => {
 
 let interval = null;
 
-const Quiz = ({ title = 'Arithmetic Quiz - 1', totalQuestionLength = 10, id }) => {
+const Quiz = ({ title , totalQuestionLength }) => {
     console.log('Rendering Quiz Item');
     let questions = useRef([]);
+    let answerRef = useRef(undefined);
+    let currQuestionNumberRef = useRef(1);
+    
     const [answers, setAnswers] = useState([]);
     const [countDown, setCountDown] = useState(TIMER);
     const [answer, setAnswer] = useState('');
     const [totalScore, setTotalScore] = useState(0);
-    let answerRef = useRef('');
-    const currQuiz = useSelector(state => state.quiz.quizzes.filter(item => item.id === id ))
-    console.log(currQuiz, 'ee')
-    const dispatch = useDispatch();
-    // const [quizStatus, setQuizStatus] = useState('NOT_STARTED');
+    const [operators, setOperators] = useState(['+', '-', '*']);
+    const [maxValue, setMaxValue] = useState(10)
+    const [quizStatus, setQuizStatus] = useState('NOT_STARTED');
 
     const calculateScore = () => {
         let temp = 0;
@@ -65,91 +64,88 @@ const Quiz = ({ title = 'Arithmetic Quiz - 1', totalQuestionLength = 10, id }) =
     }
 
     const newQuestion = () => {
-        let question = randomQuestion();
-        questions.current.push(question);
-        if(currQuiz[0].status === 'STARTED')
-            dispatch(updateQuiz({
-                title: title,
-                totalQuestionLength: totalQuestionLength,
-                currentActiveQuestion: answers.length,
-                id: id,
-                status: 'STARTED',
-                answers: answers,
-                questions: questions.current
-            }));
+        if(questions.current.length >= currQuestionNumberRef.current){
+            return;
+        }
+        const question = randomQuestion(maxValue, operators);
+        questions.current[currQuestionNumberRef.current - 1] = question;
     }
 
     const nextQuestionHandler = () => {
-        let totalAnswers = answers.length;
-        if (totalAnswers >= totalQuestionLength) {
+        
+        const totalAnswers = currQuestionNumberRef.current;
+        if (totalAnswers > totalQuestionLength) {
             return;
         }
-
-        setCountDown(TIMER);
         let arr = answers;
-        arr.push(answerRef.current);
-        answerRef.current = '';
+        arr[currQuestionNumberRef.current - 1] = answerRef.current;
+        answerRef.current = undefined;
         setAnswers([...arr]);
-        dispatch(updateQuiz({
-            title: title,
-            totalQuestionLength: totalQuestionLength,
-            currentActiveQuestion: totalAnswers + 1,
-            id: id,
-            status: 'STARTED',
-            answers: arr,
-            questions: questions.current
-        }));
-        if (totalAnswers + 1 >= totalQuestionLength) {
-            // setQuizStatus('END');
+        currQuestionNumberRef.current +=1 ;
+        if (currQuestionNumberRef.current > totalQuestionLength) {
+            setQuizStatus('END');
             clearInterval(interval);
             calculateScore();
             return;
         }
         newQuestion();
+        setCountDown(TIMER);
         setAnswer('');
     }
 
+    const restartHandler = () => {
+        setQuizStatus('NOT_STARTED');
+        setCountDown(TIMER);
+        currQuestionNumberRef.current = 1;
+        questions.current = [];
+        setAnswer('');
+        setAnswers([]);
+    }
+    
     if (countDown === -1 && answers.length < totalQuestionLength) {
         nextQuestionHandler();
     }
 
 
     useEffect(() => {
-        newQuestion();
-        if(currQuiz[0].status === 'STARTED')
-        startQuizHandler();
         return () => clearInterval(interval);
     }, [totalQuestionLength]);
 
     const startQuizHandler = () => {
-
-
-        // setQuizStatus('STARTED');
-        
-        interval = setInterval(() => {
-            if (answers.length < totalQuestionLength) {
+        if(operators.length === 0){
+            alert(`Select one Operator to Start ${title}`);
+            return;
+        }
+        newQuestion();
+        setQuizStatus('STARTED');
+        interval = setInterval(function() {
+            console.log(answers)
+            if (questions.current.length < totalQuestionLength) {
                 setCountDown(pre => pre - 1);
             }
         }, 1000);
-        if(currQuiz[0].status !== 'STARTED')
-            dispatch(updateQuiz({
-                title: title,
-                totalQuestionLength: totalQuestionLength,
-                currentActiveQuestion: 1,
-                id: id,
-                status: 'STARTED'
-            }));
+
     }
 
+    const operatorHandler = (item) => {
+        if(operators.includes(item)){
+            let newOperators = operators.filter(op => op !== item);
+            setOperators([...newOperators]);
+        }else {
+            let newOperators = [...operators];
+            newOperators.push(item);
+            setOperators([...newOperators]);
+        }
+    }
 
-    if (currQuiz[0].status === 'END') {
+    if (quizStatus === 'END') {
         return (  
             <div className='quizWrapper'>
                 <div className='quizHeaderWrapper'>
                     <div className='quizHeaderText'>
                         {title}
                     </div>
-                    <div>
+                    <div className='quizTotalQuestionText'> 
                         Total Questions {totalQuestionLength}
                     </div>
                 </div>
@@ -186,10 +182,9 @@ const Quiz = ({ title = 'Arithmetic Quiz - 1', totalQuestionLength = 10, id }) =
                                             Number(question.correctAnswer)
                                         :
                                         <>
-
-                                            {Number(answers[index])}
-
-                                            {'  '}Correct Answer is {' '}
+                                            {!answers[index] ? "Invalid / Not Answered" : Number(answers[index])}
+                                            <br />
+                                            {'  '}Correct Answer is {'  '}
                                             {Number(question.correctAnswer)}
                                             
                                         </>
@@ -199,19 +194,63 @@ const Quiz = ({ title = 'Arithmetic Quiz - 1', totalQuestionLength = 10, id }) =
                         )
                     })}
                 </div>
+                <button className='nextButton' onClick={restartHandler}>
+                    Restart Quiz
+                </button>
             </div>
         )
     }
 
-    if (currQuiz[0].status === 'NOT_STARTED') {
+    if (quizStatus === 'NOT_STARTED') {
         return (
             <div className='quizWrapper'>
                 <div className='quizHeaderWrapper'>
                     <div className='quizHeaderText'>
                         {title}
                     </div>
-                    <div>
+                    <div className='quizTotalQuestionText'>
                         Total Questions {totalQuestionLength}
+                    </div>
+                </div>
+                <div className='quizOptionWrapper'>
+                    <div className='quizMaxOperandWrapper'>
+                    <label>Max Operand Value</label>
+                    <input 
+                        min={10} 
+                        
+                        max={50} 
+                        value={maxValue}
+                        type='number' 
+                        onChange={(e) => setMaxValue(e.target.value)}
+                        // onChange={}
+                        className='quizMaxValueInput'
+                    />
+                    </div>
+                    <div>
+                        <button 
+                            onClick={()=>operatorHandler('+')}
+                            className={operators.includes('+') ? 'quizOperatorButtonSelected' : 'quizOperatorButton'} 
+                        >
+                            +
+                        </button>
+                        <button 
+                            onClick={()=>operatorHandler('-')}
+                            className={operators.includes('-') ? 'quizOperatorButtonSelected' : 'quizOperatorButton'} 
+                        >
+                            -
+                        </button>
+                        <button 
+                            onClick={()=>operatorHandler('*')}
+                            className={operators.includes('*') ? 'quizOperatorButtonSelected' : 'quizOperatorButton'} 
+                        >
+                            *
+                        </button>
+                        <button 
+                            onClick={()=>operatorHandler('/')}
+                            className={operators.includes('/') ? 'quizOperatorButtonSelected' : 'quizOperatorButton'} 
+                        >
+                            /
+                        </button>
                     </div>
                 </div>
                 <button className='nextButton' onClick={startQuizHandler}>
@@ -221,13 +260,14 @@ const Quiz = ({ title = 'Arithmetic Quiz - 1', totalQuestionLength = 10, id }) =
         )
     }
 
+
     return (
         <div className='quizWrapper'>
             <div className='quizHeaderWrapper'>
                 <div className='quizHeaderText'>
                     {title}
                 </div>
-                <div>
+                <div className='quizTotalQuestionText'>
                     {answers.length + 1} / {totalQuestionLength}
                 </div>
                 <div className='quizTimerText'>
